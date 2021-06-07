@@ -1239,16 +1239,14 @@ namespace seal
                     modulo_poly_coeffs(delta, coeff_count_, get<2>(I), get<1>(I));
                     // delta_rns = (k mod t) * last_q mod q_{i}
                     multiply_poly_scalar_coeffmod(get<1>(I), coeff_count_, last_modulus_value, get<2>(I), get<1>(I));
-                    // 2 * qi
-                    const uint64_t Lqi = get<2>(I).value() << 1;
                     // delta_rns = (c mod q_i + k * last_q mod q_i) mod q_i
                     SEAL_ITERATE(iter(get<0>(I), get<1>(I), input[modulus_size - 1]), coeff_count_, [&](auto J){
                         // c mod q_i
                         auto last_mod_q_i = barrett_reduce_64(get<2>(J), get<2>(I));
                         // k * last_q mod q_i
                         auto k_last_q = barrett_reduce_64(get<1>(J), get<2>(I));
-                        // c = c - delta_rns
-                        get<0>(J) = get<0>(J) + Lqi - (last_mod_q_i + k_last_q);
+                        // c = c - delta_rns. Lazy reduction in [0, 2*qi)
+                        get<0>(J) = get<0>(J) + (get<2>(I).value() << 1) - (last_mod_q_i + k_last_q);
                     });
 
                     // c = c/q_t
